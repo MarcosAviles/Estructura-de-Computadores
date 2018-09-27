@@ -1,0 +1,11 @@
+   0x08048688 <main+111>:       add    $0x804a038,%eax
+
+en esta linea vemos que contiene en la memoria "acabmob"
+introduciendo la palabra clave encontrada vuelve a explotar la bomba, por lo que seguimos mirando el código
+nos damos cuenta que realiza un bucle comparando caracter a caracter, y le da la vuelva a la palabra es decir, 
+convierte bombaca en acabmob, por lo que la palabra clave es bombaca.
+
+   0x08048705 <main+236>:       mov    0x804a040,%eax
+
+para el código solo tenemos que visualizar el registro eax, o la dirección de memoria 0x804a040, y vemos que el código es
+1357

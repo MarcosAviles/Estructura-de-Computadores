@@ -1,0 +1,21 @@
+contraseña DimeloPapi
+666
+
+  0x08048738 <main+112>:       mov    %eax,0x8(%esp)
+   0x0804873c <main+116>:       movl   $0x804a040,0x4(%esp)
+   0x08048744 <main+124>:       lea    0x28(%esp),%eax
+   0x08048748 <main+128>:       mov    %eax,(%esp)
+   0x0804874b <main+131>:       call   0x8048500 <strncmp@plt>
+
+En la linea 5, donde mueve la dirección de memoria a la pila, podemos ver en el registro el contenido de la constraseña ("DimeloPapi")
+
+   0x080487a7 <main+223>:       sub    $0x6f,%eax
+   0x080487aa <main+226>:       mov    %eax,0x14(%esp)
+   0x080487ae <main+230>:       mov    0x14(%esp),%edx
+   0x080487b2 <main+234>:       mov    0x804a04c,%eax
+   0x080487b7 <main+239>:       cmp    %eax,%edx
+   0x080487b9 <main+241>:       je     0x80487c0 <main+248>
+
+Para el código numérico, nos fijamos que hay una nueva comparación antes de un salto, por lo que visualizamos el registro %eax,
+que contiene 555, introducimos ese código y la explota la bomba, entonces nos volvemos a fijar, y en la linea 12, vemos que realiza
+una resta al numero que introducimos, (resta 6f, en hexadecimal, resta 111), entonces sabemos que introduciendo 666 desactivamos la bomba

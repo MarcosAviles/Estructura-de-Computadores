@@ -1,0 +1,189 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+
+#define TEST 0
+#define COPY_PASTE_CALC 1
+
+#if ! TEST
+	#define NBITS 20
+	#define SIZE (1<<NBITS)
+	unsigned list[SIZE];
+	#define RESULT (SIZE/2)
+#else
+/*#define SIZE 4
+	unsigned list[SIZE]= {0x80000000,0x00100000,0x00000800,0x00000001};
+#define RESULT 4
+*/
+#define SIZE 8
+unsigned list[SIZE]=
+{0x7FFFFFFF,0xFFEFFFFF,0xFFFFF7FF,0xFFFFFFFE,0x01000024,0x00356700,0x8900ac00,0x00BD00EF};
+#define RESULT 8
+/*--------------------------*/
+/*#define SIZE 8
+unsigned list[SIZE]=
+{0x0,0x10204080,0x3590AC06,0x70B0D0E0,0xFFFFFFFF,0x12345678,0x9ABCDEF0,0xCAFEBEEF};
+#define RESULT 2
+/*--------------------------*/
+#endif
+
+#define WSIZE 8*sizeof(int)
+int resultado=0;
+
+int parity1(unsigned *array, int len){
+	int i,j;
+	unsigned int x;
+	int val;
+	int result = 0;
+	for(i=0;i<len;i++){
+		x=array[i];
+		val = 0;
+		for (j = 0; j < WSIZE; j++) {
+			val ^= x & 0x1;
+			x >>= 1;
+		}
+		result += (val & 0x1) != 0;
+	}
+	return result;
+}
+
+
+int parity2(unsigned *array, int len){
+	int i;
+	unsigned int x;
+	int result = 0;
+	for(i=0;i<len;i++){
+		x=array[i];
+		int val = 0;
+		do {
+			val ^= x & 0x1;
+			x >>= 1;
+		} while (x);
+		result += (val & 0x1) != 0;
+	}
+	return result;
+}
+
+
+int parity3(unsigned *array, int len){
+	int i;
+	int val;
+	unsigned int x;
+	int result = 0;
+	for(i=0;i<len;i++){
+		x=array[i];
+		val=0;
+		while (x){
+			val ^= x & 0x1;
+			x >>= 1;
+		}
+		result += (val & 0x1) != 0;
+	}
+	return result;
+}
+
+
+int parity4(unsigned *array, int len){
+	int i;
+	unsigned int x;
+	int result = 0;
+	int val;
+	int suma=0;
+	for(i=0;i<len;i++){
+		x=array[i];
+		val=0;
+		asm("ini: \n"
+			"xor %[x],%[val]\n"
+			"shr $1, %[x]\n"
+			"cmp $0,%[x]\n"
+			"jne ini \n"
+			:[x]"+r"(x),[result]"+r"(result),[val]"+r"(val)
+			:
+			:
+		);
+		result+=(val & 0x1) != 0;
+	}
+	return result;
+}
+
+
+int parity5(unsigned *array, int len){
+	int i,j,h;
+	unsigned int x;
+	int result = 0;
+	int val;
+	for(i=0;i<len;i++){
+		x=array[i];
+		val=0;
+		for(j=0;j<8;j++){
+			val ^=x &0x01010101;
+			x>>=1;
+		}
+		for(h=16;h>0;h=h/2){
+			val^=(val>>h);
+		}
+		result += (val &0x1)!=0;
+	}
+	return result;
+}
+
+
+int parity6(unsigned *array, int len){
+	int j;
+	unsigned entero = 0;
+	int result = 0;
+	for (j = 0; j < len; j++) { 
+		entero = array[j]; 
+		asm( "mov %[x], %%edx \n"
+			"shr $16, %%edx \n"
+			"xor %[x], %%edx \n"
+			"xor %%dh, %%dl \n"
+			"setpo %%dl \n"
+			"movzx %%dl, %[x] \n"
+			: [x] "+r" (entero) 
+			:
+			: "edx"
+		);
+		result += entero;
+	}
+return result;
+}
+
+
+void crono(int (*func)(), char *msg){
+
+	struct timeval tv1,tv2; 
+	long tv_usecs;
+	gettimeofday(&tv1,NULL);
+	resultado = func(list, SIZE);
+	gettimeofday(&tv2,NULL);
+	tv_usecs=(tv2.tv_sec -tv1.tv_sec)*1E6+
+		(tv2.tv_usec-tv1.tv_usec);
+
+	#if ! COPY_PASTE_CALC
+		printf("resultado = %d\t", resultado);
+		printf("%s:%9ld us\n", msg, tv_usecs);
+	#else
+		printf("%6ld\n",tv_usecs);
+	#endif
+}
+
+int main(){
+	#if ! TEST
+	int i;
+
+	for(i=0; i<SIZE; i++)// se queda en cache
+		list[i]=i;
+	#endif
+crono(parity1, "parity1 ()");
+crono(parity2, "parity2 ()");
+crono(parity3, "parity3 ()");
+crono(parity4, "parity4 ()");
+crono(parity5, "parity5 ()");
+crono(parity6, "parity6 ()");
+#if ! COPY_PASTE_CALC
+	printf("Resultado:%d\n",RESULT);
+
+#endif
+	exit(0);
+}

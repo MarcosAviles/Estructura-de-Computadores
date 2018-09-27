@@ -1,0 +1,3 @@
+el salto se debe a que el tamaño del vector no cabe en el primer nivel de memoria cache del procesador, y comienza a dar fallos por lo que se dispara la velocidad,
+carga el vector en la siguiente nivel de memoria cache que se asegura que cabe el tamaño del vector y ocurre lo mismo, comienza a dar fallos y la velocidad se dispara,
+asi hasta que podemos ver los distintos niveles de cache que contiene nuestro microprocesador y el tamaño.
